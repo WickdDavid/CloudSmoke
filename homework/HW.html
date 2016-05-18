@@ -94,7 +94,10 @@
         /**
          * Draws the image, which consists of either the "world" or a closeup of the "car".
          */
-        function draw() {
+        function draw() {            
+        	if (!angle) {
+            	angle = 0.00;
+            }
 
             gl.clearColor(0, 0, 0, 1);
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -108,13 +111,14 @@
             //mat3.normalFromMat4(normalMatrix, modelview); //computes the normalMatrix (used to multiply the normals) from the modelview
             
             //var light_vector = vec4.fromValues(Math.cos(frameNumber/30)*30,20,Math.sin(frameNumber/30)*30,1.0);s
-            var light_vector = vec4.fromValues(-2.0,0.3,4.0,1.0);
+            var light_vector = vec4.fromValues((radius + 0.9)*Math.cos(angle + 0.35),0.3,(radius + 0.9)*Math.sin(angle + 0.35),1.0 );
             mat4.multiply(light_vector,modelview,light_vector);
             gl.uniform3f(u_LightPosition,light_vector[0],light_vector[1],light_vector[2]);
             
             pushMatrix();
             mat4.translate(modelview,modelview,[0,4,0]);
-            cube.render();
+            mat4.scale(modelview,modelview,[0.2,0.2,0.2])
+            teapot.render();
             popMatrix();
             if (show == 1)
                 world();
@@ -126,6 +130,9 @@
          * Draws a "world" consisting of a disk holding some trees and a road, and a car that
          * drives along the road.  A tree in the middle grows from frame 0 to frame 1000.
          */
+         var radius = 4;
+         var angle;
+         var increment = 0.015;
         function world() {
             pushMatrix(); //creates a copy of the current top matrix of the matrix stack
             mat4.translate(modelview, modelview, [0, -0.05, 0]); //modifies the second parameter (modelview) by multiplying it with
@@ -145,16 +152,26 @@
             popMatrix();
             //First Bycicle
             pushMatrix();
-            mat4.translate(modelview, modelview, [0, 0.4, 4]);
+            var coordFirstBikeX = Math.cos(angle)*(radius + 0.4);
+            var coordFirstBikeY = Math.sin(angle)*(radius + 0.4);
+            mat4.translate(modelview, modelview, [coordFirstBikeX, 0.4, coordFirstBikeY]);
+            mat4.rotate(modelview,modelview, Math.atan2(coordFirstBikeX,coordFirstBikeY),[0,1,0]);
             mat4.scale(modelview, modelview, [0.4, 0.4, 0.4]);
             bicycle();
             popMatrix();
+            //Second Bycicle
             pushMatrix();
-            mat4.translate(modelview, modelview, [0.5, 0.4, 0.2]);
-            mat4.rotate(modelview, modelview, Math.PI / 4, [0, 1, 0])
+            coordFirstBikeX = Math.cos(angle*1.5)*(radius - 0.4);
+            coordFirstBikeY = Math.sin(angle*1.5)*(radius - 0.4);
+            mat4.translate(modelview, modelview, [coordFirstBikeY, 0.4, coordFirstBikeX]);
+            mat4.rotate(modelview, modelview, Math.atan2(coordFirstBikeY,coordFirstBikeX), [0, 1, 0])
             mat4.scale(modelview, modelview, [0.4, 0.4, 0.4]);
+            pushMatrix();
+            mat4.rotate(modelview,modelview, Math.PI,[0,1,0]);
             bicycle();
             popMatrix();
+            popMatrix();
+
             pushMatrix();
             mat4.translate(modelview, modelview, [5.3, 0, 0]);
             mat4.scale(modelview, modelview, [0.5, 0.5, 0.5]);
@@ -186,6 +203,10 @@
             tree();
             popMatrix();            
             popMatrix();
+            angle += increment;
+            if (angle == 360) {
+            	angle = 0;
+            }
         }
 
         /**
@@ -488,16 +509,16 @@
                 var u_AmbientLight = gl.getUniformLocation(prog, "u_AmbientLight");
                 
                 gl.uniform3f(u_ViewerPosition,0,0,0);
-                gl.uniform3f(u_LightColor, 1.0, 1.0, 1.0);
+                gl.uniform3f(u_LightColor, 0.8,0.8,0.8);
                 // Set the light direction (in the world coordinate)
                 //gl.uniform3f(u_LightPosition, -3.0,3.0, 10.0);
                 //gl.uniform3f(u_LightPosition2, 0, 14.5, 0);
                 // Set the ambient light
                 gl.uniform3f(u_AmbientLight, 0.2, 0.2, 0.2);
                 // Set the specular color (white)
-                gl.uniform3f(u_SpecularColor, 0.8, 0.8, 0.8);
+                gl.uniform3f(u_SpecularColor, 0.4, 0.4, 0.4);
                 // Set the ambient light
-                gl.uniform1f(u_Exponent,5.0);
+                gl.uniform1f(u_Exponent,3);
                 
                 gl.enableVertexAttribArray(aCoords); // won't change after initialization.
                 gl.enableVertexAttribArray(aNormal); // also won't change.
@@ -515,11 +536,9 @@
             disk = createModel(uvCylinder(5.5, 0.5, 64), [0, 0, .25]);
             ring = createModel(ring(3.3, 4.8, 40));
             cube = createModel(cube());
+            teapot = createModel(teapotModel);
             rotator = new SimpleRotator(canvas, draw);
             rotator.setView([0, 1, 2], [0, 1, 0], 16);
-            var pippo = mat4.create();
-            mat4.invert(pippo,rotator.getViewMatrix())
-            console.log(pippo);
             frame();
         }
     </script>
