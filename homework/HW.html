@@ -20,7 +20,7 @@
         vec4 coords = vec4(coords,1.0);
         vec4 transformedVertex = modelview * coords;
         gl_Position = projection * transformedVertex;
-        v_Position = vec3(gl_Position);
+        v_Position = vec3(transformedVertex);
         v_Normal = normalize(normalMatrix*normal);
         v_Color = color;
         }
@@ -41,7 +41,7 @@
         void main() {
             vec3 normal = normalize(v_Normal);
             vec3 lightDirection = normalize(u_LightPosition - v_Position);
-            vec3 viewerDirection = normalize(u_ViewerPosition - v_Position);
+            vec3 viewerDirection = -normalize(u_ViewerPosition - v_Position);
             vec3 reflectDirection = normalize(reflect(lightDirection, normal));
             
             float nDotL = max(dot(lightDirection, normal), 0.0);
@@ -108,10 +108,14 @@
             //mat3.normalFromMat4(normalMatrix, modelview); //computes the normalMatrix (used to multiply the normals) from the modelview
             
             //var light_vector = vec4.fromValues(Math.cos(frameNumber/30)*30,20,Math.sin(frameNumber/30)*30,1.0);s
-            var light_vector = vec4.fromValues(0.0,3.0,0.0,1.0);
+            var light_vector = vec4.fromValues(-2.0,0.3,4.0,1.0);
             mat4.multiply(light_vector,modelview,light_vector);
             gl.uniform3f(u_LightPosition,light_vector[0],light_vector[1],light_vector[2]);
             
+            pushMatrix();
+            mat4.translate(modelview,modelview,[0,4,0]);
+            cube.render();
+            popMatrix();
             if (show == 1)
                 world();
             else
@@ -141,7 +145,7 @@
             popMatrix();
             //First Bycicle
             pushMatrix();
-            mat4.translate(modelview, modelview, [0, 0.4, 0]);
+            mat4.translate(modelview, modelview, [0, 0.4, 4]);
             mat4.scale(modelview, modelview, [0.4, 0.4, 0.4]);
             bicycle();
             popMatrix();
@@ -483,16 +487,17 @@
                 u_LightPosition = gl.getUniformLocation(prog, "u_LightPosition");
                 var u_AmbientLight = gl.getUniformLocation(prog, "u_AmbientLight");
                 
+                gl.uniform3f(u_ViewerPosition,0,0,0);
                 gl.uniform3f(u_LightColor, 1.0, 1.0, 1.0);
                 // Set the light direction (in the world coordinate)
-                gl.uniform3f(u_LightPosition, -3.0,3.0, 10.0);
+                //gl.uniform3f(u_LightPosition, -3.0,3.0, 10.0);
                 //gl.uniform3f(u_LightPosition2, 0, 14.5, 0);
                 // Set the ambient light
-                gl.uniform3f(u_AmbientLight, 0.4, 0.4, 0.4);
+                gl.uniform3f(u_AmbientLight, 0.2, 0.2, 0.2);
                 // Set the specular color (white)
-                gl.uniform3f(u_SpecularColor, 0.1, 0.1, 0.1);
+                gl.uniform3f(u_SpecularColor, 0.8, 0.8, 0.8);
                 // Set the ambient light
-                gl.uniform1f(u_Exponent,14);
+                gl.uniform1f(u_Exponent,5.0);
                 
                 gl.enableVertexAttribArray(aCoords); // won't change after initialization.
                 gl.enableVertexAttribArray(aNormal); // also won't change.
@@ -512,6 +517,9 @@
             cube = createModel(cube());
             rotator = new SimpleRotator(canvas, draw);
             rotator.setView([0, 1, 2], [0, 1, 0], 16);
+            var pippo = mat4.create();
+            mat4.invert(pippo,rotator.getViewMatrix())
+            console.log(pippo);
             frame();
         }
     </script>
