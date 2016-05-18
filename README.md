@@ -8,6 +8,7 @@ Download the file Homework.zip from the course homepage in Piazza
 https://piazza.com/uniroma1.it/spring2016/1044398/home
 
 There are 4 files:
+
 1. basic-objects.js:	contains the definition of the primitives used in the example
 2. gl-matrix.js 		contains the utility functions on matrices and vectors
 3. HW.html 				Main File
