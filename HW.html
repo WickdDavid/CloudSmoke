@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>HomeWork#1</title>
+
+<script type="x-shader/x-vertex" id="vshader">
+    attribute vec3 coords;
+    attribute vec3 normal;
+    uniform mat4 modelview;
+    uniform mat4 projection;
+    uniform mat3 normalMatrix;
+    uniform vec4 color;
+        
+    varying vec3 v_Position;
+    varying vec3 v_Normal;
+    varying vec4 v_Color;
+    void main() { 
+    	vec4 coords = vec4(coords,1.0);
+        vec4 transformedVertex = modelview * coords;
+        gl_Position = projection * transformedVertex;
+        v_Position = vec3(transformedVertex);
+        v_Normal = normalize(normalMatrix*normal);
+        v_Color = color;
+    }
+</script>
+<script type="x-shader/x-fragment" id="fshader">
+    precision mediump float;
+    uniform vec3 u_LightColor;
+    uniform vec3 u_LightPosition;
+    uniform vec3 u_LightPosition2;
+    uniform vec3 u_ViewerPosition;
+    uniform vec3 u_SpecularColor;
+    uniform float u_Exponent;
+    uniform vec3 u_AmbientLight;
+    uniform vec3 u_DirectionalLight;
+    varying vec3 v_Normal;
+    varying vec3 v_Position;
+    varying vec4 v_Color;
+    void main() {
+        vec3 normal = normalize(v_Normal);
+        vec3 lightDirection = normalize(u_LightPosition - v_Position);
+        vec3 lightDirection2 = normalize(u_LightPosition2 - v_Position);
+        vec3 lightDirection3 = u_DirectionalLight;
+        vec3 viewerDirection = -normalize(u_ViewerPosition - v_Position);
+        vec3 reflectDirection = normalize(reflect(lightDirection, normal));
+        vec3 reflectDirection2 = normalize(reflect(lightDirection2,normal));	
+        vec3 reflectDirection3 = normalize(reflect(lightDirection3,normal));
+        float nDotL = max(dot(lightDirection, normal), 0.0);
+        float rDotV = pow(max(dot(reflectDirection, viewerDirection), 0.0),u_Exponent);
+        float nDotL2 = max(dot(lightDirection2, normal), 0.0);
+        float rDotV2 = pow(max(dot(reflectDirection2, viewerDirection), 0.0),u_Exponent);
+            
+        float nDotL3 = max(dot(lightDirection3, normal), 0.0);
+        float rDotV3 = pow(max(dot(reflectDirection3, viewerDirection), 0.0),u_Exponent);
+        vec3 diffuse = u_LightColor * v_Color.rgb * (nDotL + nDotL2 + nDotL3);
+        vec3 specular = u_LightColor * u_SpecularColor.rgb * (rDotV + rDotV2 + rDotV3);
+        vec3 ambient = u_AmbientLight * v_Color.rgb;
+        gl_FragColor = vec4(diffuse + ambient + specular , v_Color.a);
+    }
+</script>
+
+
+<script type="text/javascript" src="gl-matrix.js"></script>
+<script type="text/javascript" src="basic-objects.js"></script>
+<script type="text/javascript" src="simple-rotator.js"></script>
+
+<script type="text/javascript" src="hw.js">"use strict";</script>
+</head>
+<body onload="init()" style="background-color:#DDD">
+
+
+
+<p id="message" style="font-weight:bold">Drag your mouse on the model to rotate it.</p>
+
+<p>
+</p>
+
+
+<div>
+
+    <canvas width=800 height=800 id="glcanvas" style="background-color:blue"></canvas>
+
+</div>
+
+
+</body>
+</html>
+
